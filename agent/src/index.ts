@@ -16,7 +16,9 @@ import { AlexaClientInterface } from "@elizaos/client-alexa";
 import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb";
 import { DevaClientInterface } from "@elizaos/client-deva";
 
-import { mainCharacter } from "./character.js";
+import { mainCharacter } from "./mainCharacter.js";
+import { kenFollettAgent } from "./kenfollet.character.js";
+import { isaacAsimovAgent } from "./isaacasimov.character.js";
 
 import { FarcasterClientInterface } from "@elizaos/client-farcaster";
 import { OmniflixPlugin } from "@elizaos/plugin-omniflix";
@@ -488,6 +490,8 @@ export async function loadCharacters(
     if (loadedCharacters.length === 0) {
         elizaLogger.info("No characters found, using default character");
         loadedCharacters.push(mainCharacter);
+        loadedCharacters.push(kenFollettAgent);
+        loadedCharacters.push(isaacAsimovAgent);
     }
 
     return loadedCharacters;
@@ -1481,7 +1485,7 @@ const startAgents = async () => {
     let serverPort = Number.parseInt(settings.SERVER_PORT || "3000");
     const args = parseArguments();
     const charactersArg = args.characters || args.character;
-    let characters = [mainCharacter];
+    let characters = [mainCharacter, kenFollettAgent, isaacAsimovAgent];
 
     if (process.env.IQ_WALLET_ADDRESS && process.env.IQSOlRPC) {
         characters = await loadCharacterFromOnchain();

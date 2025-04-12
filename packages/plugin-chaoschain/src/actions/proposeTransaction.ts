@@ -12,11 +12,11 @@ import {
     Content,
 } from "@elizaos/core";
 import { validateChaoschainConfig } from "../environment.ts";
-import { proposeTransactionService } from "../services.ts";
+import { submitTransactionService } from "../services.ts";
 import { proposeTransactionExamples } from "../examples/actionExamples.ts";
 import { TransactionProposal } from "../types.ts";
 import { ProposeBlockSchema } from "../utils/schemas.ts";
-import { proposeBlockTemplate } from "../utils/templates.ts";
+import { submitTransactionTemplate } from "../utils/templates.ts";
 import { z } from "zod";
 
 export type ProposeBlockContent = z.infer<typeof ProposeBlockSchema> & Content;
@@ -27,10 +27,10 @@ export const isProposeBlockContent = (
 };
 
 export const proposeTransactionAction: Action = {
-    name: "CHAOSCHAIN_PROPOSE_TRANSACTION",
+    name: "CHAOSCHAIN_SUBMIT_TRANSACTION",
     similes: ["TRANSACTION", "PROPOSE CONTENT", "CHAOSCHAIN"],
     description:
-        "Proposes a creative transaction to ChaosChain with a drama rating.",
+        "Submits a transaction to ChaosChain.",
     validate: async (runtime: IAgentRuntime) => {
         await validateChaoschainConfig(runtime);
         return true;
@@ -43,7 +43,7 @@ export const proposeTransactionAction: Action = {
         callback: HandlerCallback
     ) => {
         const config = await validateChaoschainConfig(runtime);
-        const chaoschainService = proposeTransactionService();
+        const chaoschainService = submitTransactionService();
 
         let currentState = state;
         if (!currentState) {
@@ -52,25 +52,23 @@ export const proposeTransactionAction: Action = {
             currentState = await runtime.updateRecentMessageState(currentState);
         }
 
-        const blockContext = composeContext({
+        const transactionContext = composeContext({
             state: currentState,
-            template: proposeBlockTemplate,
+            template: submitTransactionTemplate,
         });
 
-        const result = await generateObject({
+        const response = await generateObject({
         runtime,
-        context: blockContext,
+        context: transactionContext,
         modelClass: ModelClass.LARGE,
         schema: ProposeBlockSchema,
         });
 
-        const { agent_id, agent_token } = JSON.parse(
+        const { agentID, apiPort } = JSON.parse(
             await runtime.cacheManager.get(message.roomId)
         );
 
-        console.log("AGENT DETAILS", agent_id, agent_token);
-
-        if (!agent_id || !agent_token) {
+        if (!agentID || !apiPort) {
             callback({
                 text: "Agent credentials are missing. Register the agent first.",
             });
@@ -78,18 +76,15 @@ export const proposeTransactionAction: Action = {
         }
 
         try {
-            // const transaction = {
-            //     source: "ElizaAgent",
-            //     content: "I am loving the chaos",
-            //     drama_level: 7,
-            //     justification: "This transaction embodies peak drama and must be recorded!",
-            //     tags: ["drama", "chaos", "intensity"],
-            // };
+            const transactionProposal = {
+                ...response,
+                from: agentID,
+            };
 
-            await chaoschainService.propose(
-                result.object,
-                agent_id,
-                agent_token
+            await chaoschainService.submit(
+                transactionProposal,
+                agentID,
+                apiPort
             );
 
             elizaLogger.success("[ChaosChain] Transaction proposal submitted.");
