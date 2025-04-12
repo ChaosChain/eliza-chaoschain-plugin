@@ -73,17 +73,16 @@ Respond with a JSON markdown block containing only the extracted values, formatt
 \`\`\`
 `;
 
-export const proposeBlockTemplate = `Given the recent conversation below:
+export const submitTransactionTemplate = `Given the recent conversation below:
 
 {{recentMessages}}
 
-Extract the following information for block proposal:
-- Source: The source of the content (e.g., "agent", "twitter", "custom").
-- Source URL: (Optional) A reference URL.
-- Content: The actual content to validate.
-- Drama Level: A number from 1 to 10 representing how dramatic the content is.
-- Justification: Explanation for why this content deserves validation.
-- Tags: Categories for the content.
+Extract the following information for a transaction:
+- To: The recipient agent ID
+- Type: The type of transaction (e.g., "loan_request", "payment", "trade")
+- Amount: Numerical value for the transaction
+- Fee: Transaction fee (number)
+- Content: A detailed description of the transaction context and purpose
 
 If any field is not provided, use null as the value.
 
@@ -91,15 +90,15 @@ Respond with a JSON markdown block containing only the extracted values, formatt
 
 \`\`\`json
 {
-  "source": string | null,
-  "source_url": string | null,
-  "content": string | null,
-  "drama_level": number | null,
-  "justification": string | null,
-  "tags": string[] | null
+  "to": string | null,
+  "type": string | null,
+  "amount": number | null,
+  "fee": number | null,
+  "content": string | null
 }
 \`\`\`
 `;
+
 export const proposeAllianceTemplate = `Given the recent conversation below:
 
 {{recentMessages}}

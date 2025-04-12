@@ -7,8 +7,9 @@ export interface ChaosAgentRegistration {
 }
 
 export interface ChaosAgentResponse {
-    agent_id: string;
-    token: string;
+    agentID: string;
+    apiPort: number;
+    message: string;
 }
 
 export interface BlockValidationRequest {
@@ -26,11 +27,12 @@ export interface BlockValidationDecision {
 }
 
 export interface TransactionProposal {
-    source: string;
+    from: string;
+    to: string;
+    type: string;
+    amount: number;
+    fee: number;
     content: string;
-    drama_level: number;
-    justification: string;
-    tags: string[];
 }
 
 export interface AllianceProposal {
@@ -38,4 +40,11 @@ export interface AllianceProposal {
     purpose: string;
     ally_ids: string[];
     drama_commitment: number;
+}
+
+export interface RegisterAgentContent {
+    id?: string;
+    name: string;
+    role: string;
+    metadata: Record<string, unknown>;
 }

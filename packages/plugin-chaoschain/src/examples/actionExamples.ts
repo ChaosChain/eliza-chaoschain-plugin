@@ -48,7 +48,7 @@ export const proposeTransactionExamples: ActionExample[][] = [
             user: "{{agent}}",
             content: {
                 text: "Submitting transaction...",
-                action: "CHAOSCHAIN_PROPOSE_TRANSACTION"
+                action: "CHAOSCHAIN_SUBMIT_TRANSACTION"
             }
         },
     ],

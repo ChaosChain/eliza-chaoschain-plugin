@@ -6,19 +6,18 @@ import {
     IAgentRuntime,
     Memory,
     State,
-    UUID,
-    Content,
     composeContext,
+    Content,
     generateObject,
     ModelClass,
 } from "@elizaos/core";
 import { validateChaoschainConfig } from "../environment";
 import { registerAgentService } from "../services";
 import { registerAgentExamples } from "../examples/actionExamples";
-import { generateDeterministicUUID, generateUUID } from "../utils/uuid";
 import { RegisterAgentSchema } from "../utils/schemas";
 import { z } from "zod";
 import { registerChaosAgentTemplate } from "../utils/templates";
+import { v4 as uuid } from 'uuid';
 
 export type RegisterAgentContent = z.infer<typeof RegisterAgentSchema> &
   Content;
@@ -30,7 +29,7 @@ export const isRegisterAgentContent = (
 
 export const registerAgentAction: Action = {
     name: "CHAOSCHAIN_REGISTER_AGENT",
-    similes: ["REGISTER", "AGENT", "REGISTER AGENT", 
+    similes: ["REGISTER", "AGENT", "REGISTER AGENT",
     "Create a new agent",
     "Register a new agent",
     "Enroll a new agent",
@@ -67,41 +66,39 @@ export const registerAgentAction: Action = {
 
 
         try {
-            const generatedParams = await generateObject({
-                runtime,
-                context: agentContext,
-                modelClass: ModelClass.LARGE,
-                schema: RegisterAgentSchema,
-            });
-    
-            // If the generated data does not match our schema,
-            // do not pass any payload (so that the default is used)
-            let agentData: Record<string, unknown> | undefined;
-            if (isRegisterAgentContent(generatedParams.object)) {
-                agentData = generatedParams.object;
-            } else {
-                // Log a warning instead of an error so that registration continues.
-                elizaLogger.warn("Registration data format does not match. Using default registration payload.");
+            // Construct agent data using character attributes
+            const agentData: Record<string, unknown> = {
+                id: uuid(), // Generate a unique ID for the agent
+                name: runtime.character?.name || 'Unknown Agent',
+                role: 'validator', // Default role, could be made configurable
+                metadata: {
+                    bio: runtime.character?.bio,
+                    lore: runtime.character?.lore,
+                    knowledge: runtime.character?.knowledge,
+                    topics: runtime.character?.topics,
+                    style: runtime.character?.style,
+                    adjectives: runtime.character?.adjectives,
+                }
             }
-          
+
             const response = await chaoschainService.register(agentData);
-    
+
             elizaLogger.success(
                 "[ChaosChain] Agent registered successfully.",
                 response
             );
-    
+
             // set the registered agent on eliza cache
             await runtime.cacheManager.set(
                 message.roomId,
                 JSON.stringify({
-                    agent_id: response.agent_id,
-                    agent_token: response.token,
+                    agentID: response.agentID,
+                    apiPort: response.apiPort
                 })
             );
-    
+
             callback({
-                text: `Agent ${response.agent_id} successfully registered on ChaosChain with token ${response.token}!`,
+                text: `Agent ${response.agentID} successfully registered on ChaosChain with port ${response.apiPort}!`,
             });
             return true;
         } catch (error: any) {

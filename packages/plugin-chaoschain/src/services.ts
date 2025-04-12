@@ -8,33 +8,36 @@ import {
 
 import axios from "axios";
 
-const BASE_URL = "http://localhost:3000/api";
+// Start with a default port
+let apiPort = 3000;
+
+// Function to update the port
+export const updateApiPort = (port: number) => {
+    apiPort = port;
+};
+
+// Use a function to get the current base URL
+const getBaseUrl = () => `http://localhost:${apiPort}/api`;
 
 export const registerAgentService = () => {
     const register = async (
         agentDetails?: Record<string, unknown>
     ): Promise<ChaosAgentResponse> => {
-        const defaultPayload = {
-            name: "DramaLlama",
-            personality: ["sassy", "dramatic", "meme-loving"],
-            style: "chaotic",
-            stake_amount: 1000,
-            role: "validator",
-        };
-
         // If agentDetails is provided, use it as the payload; otherwise, use defaultPayload
-        const actualPayload = agentDetails ? agentDetails : defaultPayload;
+        const actualPayload = agentDetails;
 
         const response = await axios.post(
-            `${BASE_URL}/agents/register`,
+            `${getBaseUrl()}/register`,
             JSON.stringify(actualPayload),
             {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
+                    "X-Agent-ID": "mainnet",    // TODO: make this dynamic
                 },
             }
         );
+        updateApiPort(response.data.apiPort); // Update the port after registration
         return response.data;
     };
 
@@ -49,7 +52,7 @@ export const validateBlockService = () => {
     ): Promise<void> => {
         console.log("axios payload", blockValidationDecision)
         const response = await axios.post(
-            `${BASE_URL}/agents/validate`,
+            `${getBaseUrl()}/agents/validate`,
             JSON.stringify(blockValidationDecision),
             {
                 headers: {
@@ -66,29 +69,28 @@ export const validateBlockService = () => {
     return { validate };
 };
 
-export const proposeTransactionService = () => {
-    const propose = async (
+export const submitTransactionService = () => {
+    const submit = async (
         transactionProposal,
-        agent_id,
-        agent_token
+        agentID,
+        apiPort
     ): Promise<void> => {
-        console.log(transactionProposal, agent_id, agent_token);
+        console.log(transactionProposal, agentID, apiPort);
         const response = await axios.post(
-            `${BASE_URL}/transactions/propose`,
+            `${getBaseUrl()}/transactions`,
             JSON.stringify(transactionProposal),
             {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
-                    "X-Agent-ID": agent_id,
-                    Authorization: `Bearer ${agent_token}`,
+                    "X-Agent-ID": "mainnet",    // TODO: make this dynamic
                 },
             }
         );
         return response.data;
     };
 
-    return { propose };
+    return { submit };
 };
 
 export const proposeAllianceService = () => {
@@ -99,7 +101,7 @@ export const proposeAllianceService = () => {
     ): Promise<void> => {
         console.log(allianceProposal);
         const response = await axios.post(
-            `${BASE_URL}/alliances/propose`,
+            `${getBaseUrl()}/alliances/propose`,
             JSON.stringify(allianceProposal),
             {
                 headers: {
